@@ -3,6 +3,8 @@
 use super::{frame_alloc, FrameTracker, PhysPageNum, StepByOne, VirtAddr, VirtPageNum};
 use alloc::vec;
 use alloc::vec::Vec;
+use core::intrinsics::size_of;
+use core::slice;
 use bitflags::*;
 
 bitflags! {
@@ -154,4 +156,14 @@ pub fn translated_byte_buffer(token: usize, ptr: *const u8, len: usize) -> Vec<&
         start = end_va.into();
     }
     v
+}
+
+pub unsafe fn copy_data_into_space<T>(data: &T, token: usize, ptr: *const T) {
+    let mut i = 0;
+    let data = slice::from_raw_parts(data as *const _ as *const u8, size_of::<T>());
+    let buffers = translated_byte_buffer(token, ptr as *const u8, size_of::<T>());
+    for buffer in buffers {
+        buffer.copy_from_slice(&data[i..]);
+        i += buffer.len();
+    }
 }

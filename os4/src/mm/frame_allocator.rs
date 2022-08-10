@@ -7,6 +7,7 @@ use crate::sync::UPSafeCell;
 use alloc::vec::Vec;
 use core::fmt::{self, Debug, Formatter};
 use lazy_static::*;
+use crate::task::get_current_task_id;
 
 /// manage a frame which has the same lifecycle as the tracker
 pub struct FrameTracker {
@@ -67,6 +68,7 @@ impl FrameAllocator for StackFrameAllocator {
         if let Some(ppn) = self.recycled.pop() {
             Some(ppn.into())
         } else if self.current == self.end {
+            error!("[kernel] Physical memory exhausted. Frame alloc failed.");
             None
         } else {
             self.current += 1;
